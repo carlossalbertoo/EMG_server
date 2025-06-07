@@ -54,6 +54,18 @@ def upload_csv():
 
         print("💾 CSV guardado localmente.")
 
+        # --- Buscar archivo previo con el mismo nombre ---
+        query = f"name = '{nombre_archivo}' and '{CARPETA_DRIVE_ID}' in parents and trashed = false"
+
+        results = drive_service.files().list(q=query, spaces='drive', fields='files(id, name)').execute()
+        items = results.get('files', [])
+
+        if items:
+            for item in items:
+                file_id = item['id']
+                drive_service.files().delete(fileId=file_id).execute()
+                print(f"🗑️ Archivo previo eliminado en Drive: {item['name']} (ID: {file_id})")
+
         # Subir a Drive
         file_metadata = {
             'name': nombre_archivo,
@@ -86,5 +98,6 @@ if __name__ == '__main__':
     
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
 
 
