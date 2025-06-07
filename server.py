@@ -1,6 +1,7 @@
 from flask import Flask, request, Response
 import os
 import io
+import json
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
@@ -8,8 +9,7 @@ from datetime import datetime
 
 # --- Configuración inicial ---
 UPLOAD_FOLDER = "csv_temp"
-CARPETA_DRIVE_ID = "1nH2lySfamPtIq0m268birQTZD_kaklhc"  # <-- Pega aquí el ID de tu carpeta de Drive
-SERVICE_ACCOUNT_FILE = "emguploader-15d4576f75cc.json"   # <-- Nombre de tu archivo JSON de la Service Account
+CARPETA_DRIVE_ID = "1nH2lySfamPtIq0m268birQTZD_kaklhc"  # <-- Tu carpeta de Drive
 
 # Asegurar que la carpeta temp exista
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -19,9 +19,14 @@ app = Flask(__name__)
 
 # Inicializar cliente de Drive
 SCOPES = ['https://www.googleapis.com/auth/drive']
-credentials = service_account.Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE, scopes=SCOPES
+
+# Leer Service Account desde variable de entorno
+SERVICE_ACCOUNT_INFO = json.loads(os.environ.get("SERVICE_ACCOUNT_JSON"))
+
+credentials = service_account.Credentials.from_service_account_info(
+    SERVICE_ACCOUNT_INFO, scopes=SCOPES
 )
+
 drive_service = build('drive', 'v3', credentials=credentials)
 
 # Ruta principal solo para verificar que el server está activo
@@ -81,4 +86,5 @@ if __name__ == '__main__':
     
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
 
